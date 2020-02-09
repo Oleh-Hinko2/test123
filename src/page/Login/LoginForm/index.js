@@ -22,6 +22,11 @@ const texts = {
 }
 
 class LoginForm extends Form {
+  componentDidMount() {
+    const {setInitialData} = this.props;
+      setInitialData();
+  }
+ 
 
   onValidate = makeFormValidator({
     email: composeValidators({

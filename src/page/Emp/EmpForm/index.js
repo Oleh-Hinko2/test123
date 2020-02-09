@@ -21,7 +21,8 @@ const texts = {
 }
 
 class EmpForm extends Form {
-
+  
+  btnText = this.props.match.url !== "/login"  || this.props.match.url !== "/register" ? 'Save' : ""
   title = this.props.match.params.id !== undefined ? texts.editTitle : texts.createTitle;
 
   onValidate = makeFormValidator({
