@@ -1,9 +1,6 @@
 import { takeEvery, put, call } from 'redux-saga/effects';
-import firebase from '../../firebaseConfig';
-import ReduxSagaFirebase from 'redux-saga-firebase';
 import {notification } from 'antd';
-
-const reduxSagaFirebase = new ReduxSagaFirebase(firebase)
+import rsf from '../../firebaseConfig';
 
 const USER_LOADING = "USER_LOADING";
 const CREATE_USER = "CREATE_USER";
@@ -13,9 +10,10 @@ const USER_LOAD_SUCCESS = "USER_LOAD_SUCCESS"
 const USER_LOAD_FAILED = 'USER_LOAD_FAILED';
 const SAVE_USER = 'SAVE_USER';
 const CLEAR_USER_DATA = "CLEAR_USER_DATA"
+const EMP_INITIAL_DATA = "EMP_INITIAL_DATA"
 
 const initialState = {
-  isAuth: true,
+  isAuth: false,
   email: '',
   uid: '',
   loading: false,
@@ -34,6 +32,13 @@ export default function reducer(state = initialState, action = {}) {
         ...state,
         loading: false,
         isAuth: true
+      };
+    }
+    case EMP_INITIAL_DATA: {
+      return {
+        ...state,
+        loading: false,
+        initialValues: initialState.initialValues
       };
     }
     case SAVE_USER: {
@@ -69,15 +74,14 @@ export const createUser = ({email, password}, callback) => ({ type: CREATE_USER,
 export const userSignIn = ({email, password}, callback) => ({ type: USER_SIGN_IN, email, password, callback })
 export const getUserData = () => ({ type: GET_USER_DATA})
 export const clearUserData = () => ({ type: CLEAR_USER_DATA})
+export const setInitialData = payload => ({ type: EMP_INITIAL_DATA, data: payload })
 
 function* createUserSaga({email, password, callback}) {
   try {
     yield put({ type: USER_LOADING })
-    yield call(reduxSagaFirebase.auth.createUserWithEmailAndPassword, email, password);
+    yield call(rsf.auth.createUserWithEmailAndPassword, email, password);
     yield put({ type: USER_LOAD_SUCCESS })
     yield put({ type: GET_USER_DATA })
-    const user = firebase.auth().currentUser;
-    yield put({ type: SAVE_USER, email: user.email, uid: user.uid })
     callback("/")
   }
   catch(error) {
@@ -92,11 +96,9 @@ function* createUserSaga({email, password, callback}) {
 function* loginSaga({email, password, callback}) {
   try {
     yield put({ type: USER_LOADING })
-    yield call(reduxSagaFirebase.auth.signInWithEmailAndPassword, email, password);
+    yield call(rsf.auth.signInWithEmailAndPassword, email, password);
     yield put({ type: USER_LOAD_SUCCESS })
     yield put({ type: GET_USER_DATA })
-    const user = firebase.auth().currentUser;
-    yield put({ type: SAVE_USER, email: user.email, uid: user.uid })
     callback("/")
   }
   catch(error) {
@@ -109,9 +111,8 @@ function* loginSaga({email, password, callback}) {
 }
 
 function* signOutSaga() {
-  console.log(1)
   try {
-    yield call(reduxSagaFirebase.auth.signOut);
+    yield call(rsf.auth.signOut);
     yield put({ type: USER_LOAD_FAILED })
   }
   catch(error) {

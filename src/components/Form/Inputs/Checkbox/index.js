@@ -2,7 +2,6 @@ import React from 'react';
 import { Checkbox } from 'antd';
 
 const CheckboxField = ({ input, meta, label = "", ...props }) => {
-  console.log(label)
   return (
     <span className='c-form__checkbox'>
       <Checkbox

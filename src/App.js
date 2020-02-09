@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Route, Switch, Redirect, Link } from 'react-router-dom';
+import { Route, Switch, Redirect } from 'react-router-dom';
 import { BrowserRouter as Router } from 'react-router-dom';
 import 'firebase/auth';
 import './App.css';
@@ -9,10 +9,9 @@ import Login from './page/Login';
 import { connect } from 'react-redux';
 import LogOut from './components/Logout';
 import EmpForm from './page/Emp/EmpForm';
+import EmpDetails from './page/Emp/EmpDetails';
 
 const { Header, Content } = Layout;
-
-//const firebaseApp = firebase.initializeApp(firebaseConfig);
 
 class App extends Component {
   render() {
@@ -27,6 +26,7 @@ class App extends Component {
                 <Switch>
                   <Route exact path="/" component={Emp}/>
                   <Route exact path="/:action(edit|add)/:id?" component={EmpForm}/> 
+                  <Route exact path="/details/:id?" component={EmpDetails}/> 
                 </Switch>
               </Content>
             </Layout>
@@ -35,10 +35,7 @@ class App extends Component {
   }
 }
 
-
-
 const AppRouter = ({isAuth}) => {
-  console.log(isAuth)
   return(
     <Router>
     <Switch>

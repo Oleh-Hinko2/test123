@@ -1,23 +1,31 @@
 import React, {Component} from 'react';
-import {Table, Button} from 'antd';
+import {Table, Button, Input} from 'antd';
+
+const { Search } = Input;
+
 
 class MainTable extends Component {
   state = {
-    pagination: { defaultCurrent: 1, pageSize: 4, total: 4},
-    filter: [],
+    pagination: { defaultCurrent: 1, pageSize: 10},
   }
 
   componentDidMount = () => {
     this.props.getData();
   }
 
-  showDetailedInformation = (record, rowIndex) => {
-    const {history} = this.props;
-    history.push(`details/${record.id}`);
+  handleSearch = (value) => {
+    const {data, setData} = this.props;
+    const prevValue = value;
+    this.setState(prevState => ({
+      ...prevState,
+      prevSearchValue: value
+    }))
+    const filterData = data.filter(item => prevValue.toLowerCase().split(' ').
+                        every(v => item.name.toLowerCase().includes(v)))
+        setData(filterData)
   }
   
   handleTableChange  = (pagination, filters, sorter, extra) =>  {
-    console.log('params', pagination, filters, sorter, extra);
     this.setState(prevSate => ({
       ...prevSate,
       pagination: {
@@ -36,21 +44,28 @@ class MainTable extends Component {
   render(){
     const {pagination} = this.state;
     const {loading} = this.props;
-
-    return (
-      <>
-        <Button type="primary" onClick={this.handleAdd}>Add</Button>
-        <Table 
-          dataSource={this.props.data} 
-          columns={this.columns} 
-          rowKey={record => record.id}
-          onChange={this.handleTableChange}
-          loading={loading}
-          pagination={{ ...pagination }}
-          className="main-table"
-        />
-      </>
-    )
+      return (
+        <>
+          <div style={{display: 'flex', justifyContent: 'space-between'}}>
+            <Button type="primary" onClick={this.handleAdd}>Add</Button>
+            <Search
+              placeholder="Search by user name"
+              onSearch={value => this.handleSearch(value)}
+              style={{ width: 200 }}
+            />
+          </div>
+          <Table 
+            dataSource={!this.props.searchData.length ? this.props.data : this.props.searchData} 
+            columns={this.columns} 
+            rowKey={record => record.id}
+            onChange={this.handleTableChange}
+            loading={loading}
+            pagination={{ ...pagination }}
+            className="main-table"
+          />
+        </>
+      )
+    
   }
 }
 

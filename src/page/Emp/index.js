@@ -1,6 +1,6 @@
 import React from 'react'
 import { connect } from 'react-redux';
-import { getAllEmps, removeEmp } from '../../redux/Emp'
+import { getAllEmps, removeEmp, setData } from '../../redux/Emp'
 import Table from '../../components/Table';
 import { Button } from 'antd';
 
@@ -12,9 +12,13 @@ class Emps extends Table {
   
   handleDelete = (record) => {
     const {removeEmp} = this.props;
-    removeEmp(record.id)
+    removeEmp(record.dataID)
   }
 
+  handleShowDetails = (record) => {
+    const {history: {push}} = this.props;
+    push(`/details/${record.id}`)
+  }
 
   columns = [
     {
@@ -46,6 +50,7 @@ class Emps extends Table {
         <>
           <Button type="primary" onClick={() => this.handleEdit(record)}>Edit</Button>
           <Button type="primary" onClick={() => this.handleDelete(record)}>Delete</Button>
+          <Button type="primary" onClick={() => this.handleShowDetails(record)}>View</Button>
         </>
       )
     }
@@ -59,7 +64,8 @@ const mapStateToProps = ({emp}) => ({
 
 const mapDispatchToProps = {
   getData: getAllEmps,
-  removeEmp
+  removeEmp,
+  setData
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(Emps);

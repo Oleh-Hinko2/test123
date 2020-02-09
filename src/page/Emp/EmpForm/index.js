@@ -35,8 +35,6 @@ class EmpForm extends Form {
     }),
   })
 
-
-
   renderFields = () => {
     return (
       <div className="c-form__item">
@@ -66,13 +64,14 @@ class EmpForm extends Form {
 
 const mapStateToProps = state => ({
   values: state.emp.initialValues,
+  data: state.emp.data
 });
 
 const mapDispatchToProps = {
   getData: getEmp,
   addData: addEmp,
   setInitialData: setInitialEmp,
-  editData: editEmp
+  editData: editEmp,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(EmpForm);

@@ -9,9 +9,17 @@ export default class Form extends Component {
   cancelBtnText = 'Cancel'
 
   componentDidMount() {
-     const { getData, setInitialData, match: { params: { id } } } = this.props;
-     id ? getData(id) : setInitialData();
+    let { getData, setInitialData, data, match: { params: { id }, url }, history: {push},  } = this.props;
     console.log(this.props)
+    if (url !== "/login" || url !== "/register") {
+      id ? getData() : setInitialData();
+    }
+     else if(data.length ){
+        const currentData = data.find(item => item.id === parseInt(id))
+        id ? getData(currentData.dataID) : setInitialData();
+      } else {
+        push('/')
+      }
   }
 
   renderForm = props => {
@@ -28,9 +36,19 @@ export default class Form extends Component {
   }
 
   onSubmit = props => {
-    console.log(props)
-    const { editData,addData, history: { goBack }, match: { params: { id } } } = this.props;
-    id ? editData({ id, data: props}, goBack) : addData(props)
+    const { editData, addData, data, history: { push }, match: { params: { id } } } = this.props;
+    if(data.length){
+      props.active = data.active === "" ? false : true;
+      if (id) {
+        const currentData = data.find(item => item.id === parseInt(id))
+        props.dataID = currentData.dataID;
+        editData(props, push) 
+      } else {
+        addData(props, push)
+      }
+    } else {
+      push('/')
+    }
   }
 
   getFormValues = () => this.props.values;

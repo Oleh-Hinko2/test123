@@ -1,5 +1,4 @@
 import { takeEvery, put, call } from 'redux-saga/effects';
-//import { fetchUsers, addNewUser, editUserById, fetchUser, removeUserById } from '../../http/admin/users';
 import rsf from '../../firebaseConfig';
 
 const EMP_LOAD_SUCCESS = 'EMP_LOAD_SUCCESS';
@@ -12,6 +11,10 @@ const EMP_EDIT = 'EMP_EDIT';
 const EMP_ADD = 'EMP_ADD';
 const EMP_REMOVE = 'EMP_REMOVE';
 const EMP_SET_INITIAL = 'EMP_SET_INITIAL';
+const SET_DATA = 'SET_DATA';
+const SHOW_MODAL = 'SHOW_MODAL';
+const HIDE_MODAL = 'HIDE_MODAL';
+const CLEAR_DATA = "CLEAR_DATA"
 
 const initialState = {
   initialValues: {
@@ -20,8 +23,11 @@ const initialState = {
     department: '',
   },
   data: [],
+  searchData: [],
   loading: false,
+  modalVisible: false
 };
+
 
 export default function reducer(state = initialState, action = {}) {
   switch (action.type) {
@@ -39,11 +45,22 @@ export default function reducer(state = initialState, action = {}) {
       };
     }
     case EMPS_LOAD_SUCCESS: {
-      const {QCkKKzVecR0kIgdPAi1F} = action.data
+      let data = action.data;
+      let updateData = [];
+      let propertyData = [];
+      for (const property in data) {
+        propertyData.push(property)
+      }
+      propertyData.forEach(item => {
+        const newData = data[item]
+        newData.dataID = item
+        updateData.push(newData)
+      })
       return {
         ...state,
         loading: false,
-        data: [QCkKKzVecR0kIgdPAi1F]
+        data: updateData,
+        searchData: []
       };
     }
     case EMP_LOAD_SUCCESS: {
@@ -59,6 +76,24 @@ export default function reducer(state = initialState, action = {}) {
         loading: false,
       };
     }
+    case SET_DATA: {
+      return {
+        ...state,
+        searchData: action.data,
+      };
+    }
+    case SHOW_MODAL: {
+      return {
+        ...state,
+        modalVisible: true,
+      };
+    }
+    case HIDE_MODAL: {
+      return {
+        ...state,
+        modalVisible: false,
+      };
+    }
     default:
       return state;
   }
@@ -67,13 +102,31 @@ export default function reducer(state = initialState, action = {}) {
 // <<<ACTIONS>>>
 export const getAllEmps = () => ({ type: EMPS_LOAD })
 export const getEmp = id => ({ type: EMP_GET, id })
-export const editEmp = ({ id, data }) => ({ type: EMP_EDIT, data: { id, data } })
-export const addEmp = payload => ({ type: EMP_ADD, id: Math.random(1000), name: payload.name, active: payload.active, department: payload.department })
+export const editEmp = (payload, push) => ({ 
+                        type: EMP_EDIT, 
+                        dataID: payload.dataID, 
+                        id: payload.id, 
+                        name: payload.name, 
+                        active: payload.active, 
+                        department: payload.department,
+                        push
+                      })
+export const addEmp = (payload, push) => ({ 
+                        type: EMP_ADD, 
+                        id: Math.floor(Math.random() * 1000), 
+                        name: payload.name, 
+                        active: payload.active, 
+                        department: payload.department, 
+                        push 
+                      })
 export const setInitialEmp = payload => ({ type: EMP_SET_INITIAL, data: payload })
 export const removeEmp = id => ({ type: EMP_REMOVE, id })
+export const setData = data => ({ type: SET_DATA, data})
+export const clearData = data => ({ type: CLEAR_DATA, data})
+export const showModal = () => ({ type: SHOW_MODAL})
+export const hideModal = () => ({ type: HIDE_MODAL})
 
 // <<<WORKERS>>>
-
 function* getCollection() {
   yield put({ type: EMPS_LOADING })
   const snapshot = yield call(rsf.firestore.getCollection, 'users');
@@ -85,109 +138,66 @@ function* getCollection() {
       }
   });
   yield put({ type: EMPS_LOAD_SUCCESS, data: users })
-  console.log(users)
 };
 
-
-function* getDocument(id) {
-  const snapshot = yield call(rsf.firestore.getDocument, `users/${id}`);
-  console.log(snapshot)
-  const user = snapshot.data();
-  console.log(user)
-  //yield put(gotUser(user));
+function* getDocument({id}) {
+  try {
+    const snapshot = yield call(rsf.firestore.getDocument, `users/${id}`);
+    const user = snapshot.data();
+    yield put({ type: EMP_LOAD_SUCCESS, data: user })
+  } catch (error) {
+    console.log(error)
+  }
 }
 
-
-function* addDocument({id, name, active, department}) {
-  console.log(id)
-  const doc = yield call(
-    rsf.firestore.addDocument,
-    'users',
-    {
-      id,
-      name,
-      active,
-      department,
-    }
-  );
+function* addDocument({id, name, active, department, push}) {
+  try {
+    yield put({ type: EMPS_LOADING })
+    yield call(
+      rsf.firestore.addDocument,
+      'users',
+      {
+        id,
+        name,
+        active,
+        department,
+      }
+    );
+    yield put({ type: EMPS_LOAD })
+    push('/')
+  } catch (error) {
+    console.log(error)
+  }
 }
 
-
-function* deleteDocument(id) {
-  yield call(rsf.firestore.deleteDocument, `users/${id}`);
+function* deleteDocument({ id }) {
+  try {
+    yield call(rsf.firestore.deleteDocument, `users/${id}`);
+    yield put({ type: EMPS_LOAD })
+  } catch (error) {
+    console.log(error)
+  }
 }
 
-function* setDocument() {
-  yield call(
-    rsf.firestore.setDocument,
-    'users/1',
-    { firstName: 'Leonardo' }
-  );
+function* setDocument({dataID,  id, name, active, department, push}) {
+  try {
+    yield call(
+      rsf.firestore.setDocument,
+      `users/${dataID}`,
+      {
+        id,
+        name,
+        active,
+        department,
+      }
+    );
+    yield put({ type: EMPS_LOAD })
+    push('/')
+  } catch (error) {
+    console.log(error)
+  }
+  
 }
-
-
-// function* getEmpData({ id }) {
-//   try {
-//     yield put({ type: EMPS_LOADING })
-//     const response = yield call(fetchUser, id);
-//     if (response.status === 200) {
-//       yield put({ type: EMP_LOAD_SUCCESS, data: response.data })
-//     }
-//     if (response.status >= 400) {
-//       yield put({ type: EMPS_LOAD_FAILED })
-//     }
-//   } catch (error) {
-//     console.log(error)
-//   }
-// };
-
-// function* addData(payload) {
-//   try {
-//     yield put({ type: EMPS_LOADING })
-
-//     const response = yield call(addNewUser, payload.data);
-//     if (response.status === 200) {
-//       yield put({ type: EMPS_LOAD })
-//       yield put({ type: setInitialEmp })
-//     }
-//     if (response.status >= 400) {
-//       yield put({ type: EMPS_LOAD_FAILED })
-//     }
-//   } catch (error) {
-//     console.log(error)
-//   }
-// };
-
-// function* editData({ data: { id, data } }) {
-//   try {
-//     yield put({ type: EMPS_LOADING })
-//     const response = yield call(editUserById, id, data);
-//     if (response.status === 200) {
-//       yield put({ type: EMPS_LOAD })
-//     }
-//     if (response.status >= 400) {
-//       yield put({ type: EMPS_LOAD_FAILED })
-//     }
-//   } catch (error) {
-//     console.log(error)
-//   }
-// };
-// function* removeData({ id }) {
-//   try {
-//     yield put({ type: EMPS_LOADING })
-//     const response = yield call(removeUserById, id);
-//     if (response.status === 200) {
-//       yield put({ type: EMPS_LOAD })
-//     }
-//     if (response.status >= 400) {
-//       yield put({ type: EMPS_LOAD_FAILED }
-//         )
-//     }
-
-//   } catch (error) {
-//     console.log(error)
-//   }
-// };
 
 // <<<WATCHERS>>>
 export function* watchEmps() {

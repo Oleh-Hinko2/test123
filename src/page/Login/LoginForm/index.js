@@ -6,12 +6,11 @@ import {
 } from '../../../components/Form/Inputs';
 import {
   composeValidators,
-  isEmpty,
   makeFormValidator,
   isNotEmail,
 } from "./../../../components/Form/validation";
 import { Button } from 'antd';
-import {createUser, userSignIn} from '../../../redux/Login';
+import {createUser, userSignIn, setInitialData} from '../../../redux/Login';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 
@@ -44,7 +43,6 @@ class LoginForm extends Form {
     const {email, password} = data
     const {match: { url }, history: {push}, createUser,  userSignIn  } = this.props;
     url === "/register" ? createUser({email, password}, push) : userSignIn({email, password}, push)
-
   }
 
   renderFields = () => {
@@ -77,10 +75,8 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
   createUser,
-  userSignIn
- // addData: addEmp,
- // setInitialData: setInitialEmp,
- // editData: editEmp
+  userSignIn,
+  setInitialData,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(LoginForm));
